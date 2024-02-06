@@ -222,7 +222,7 @@ function handleAutoBlock() {
 
   observer.observe(document, { childList: true, subtree: true });
 
-  chrome.runtime.onMessage.addListener(async function (request) {
+  chrome.runtime.onMessage.addListener(async (request) => {
     if (request.action === "refreshBlockedDomains") {
       await Promise.all([loadIsFullBlocked(true), loadBlockedDomains(true)]);
       handleBlockedDomainsClock();
