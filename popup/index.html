@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="title">網域封鎖名單</h1>
+      <div class="full-blocked-form">
+        <span>是否完全隱藏封網域</span>
+        <input type="checkbox" id="full-blocked-checkbox" />
+      </div>
+      <div class="domain-add-form">
+        <input type="text" id="domain-input" placeholder="輸入網域" />
+        <button id="add-domain-btn">新增</button>
+      </div>
+      <ul id="domain-list" class="domain-list"></ul>
+    </div>
+    <script src="./popup.js" type="module"></script>
+  </body>
+</html>
