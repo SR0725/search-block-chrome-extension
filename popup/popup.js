@@ -4,24 +4,26 @@ let isFullBlocked = null;
 async function loadBlockedDomains() {
   if (blockedDomains.length > 0) return;
 
-  const { blockedDomains } = await chrome.storage.sync.get([
-    "blockedDomains",
-  ]);
-
-  blockedDomains ||= [];
-  console.log("Value currently is " + blockedDomains);
+  try {
+    const { blockedDomains: loadedBlockedDomains } = await chrome.storage.sync.get(["blockedDomains"]);
+    blockedDomains = loadedBlockedDomains || [];
+    console.log("Blocked domains loaded:", blockedDomains);
+  } catch (error) {
+    console.error("Error loading blocked domains:", error);
+  }
 }
 
 async function addBlockedDomain(domain) {
   const filtedDomain = domain.toLowerCase();
   blockedDomains.push(filtedDomain);
 
-  await chrome.storage.sync.set({ blockedDomains: blockedDomains }, () => {
-    console.log("Value is set to " + blockedDomains);
-  });
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, { action: "refreshBlockedDomains" });
-  });
+  try {
+    await chrome.storage.sync.set({ blockedDomains });
+    console.log("Blocked domain added:", domain);
+    sendMessageToTabs("refreshBlockedDomains");
+  } catch (error) {
+    console.error("Error adding blocked domain:", error);
+  }
 }
 
 async function removeBlockedDomain(domain) {
@@ -29,27 +31,43 @@ async function removeBlockedDomain(domain) {
   if (index > -1) {
     blockedDomains.splice(index, 1);
   }
-  await chrome.storage.sync.set({ blockedDomains: blockedDomains }, () => {
-    console.log("Value is set to " + blockedDomains);
-  });
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, { action: "refreshBlockedDomains" });
-  });
+
+  try {
+    await chrome.storage.sync.set({ blockedDomains });
+    console.log("Blocked domain removed:", domain);
+    sendMessageToTabs("refreshBlockedDomains");
+  } catch (error) {
+    console.error("Error removing blocked domain:", error);
+  }
 }
 
 async function loadIsFullBlocked() {
   if (isFullBlocked !== null) return;
 
-  const { isFullBlocked } = await chrome.storage.sync.get(["isFullBlocked"]);
-  isFullBlocked ||= false;
+  try {
+    const { isFullBlocked: loadedIsFullBlocked } = await chrome.storage.sync.get(["isFullBlocked"]);
+    isFullBlocked = loadedIsFullBlocked !== undefined ? loadedIsFullBlocked : false;
+    console.log("Is full blocked loaded:", isFullBlocked);
+  } catch (error) {
+    console.error("Error loading full blocked status:", error);
+  }
 }
 
 async function setIsFullBlocked(isFullBlocked) {
-  await chrome.storage.sync.set({ isFullBlocked: isFullBlocked }, () => {
-    console.log("Value is set to " + isFullBlocked);
-  });
+  try {
+    await chrome.storage.sync.set({ isFullBlocked });
+    console.log("Full blocked status set to:", isFullBlocked);
+    sendMessageToTabs("refreshBlockedDomains");
+  } catch (error) {
+    console.error("Error setting full blocked status:", error);
+  }
+}
+
+function sendMessageToTabs(action) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.sendMessage(tabs[0].id, { action: "refreshBlockedDomains" });
+    if (tabs.length > 0) {
+      chrome.tabs.sendMessage(tabs[0].id, { action });
+    }
   });
 }
 
@@ -70,10 +88,10 @@ function renderBlockedDomains() {
   });
 }
 
-function submitForm() {
+async function submitForm() {
   const input = document.getElementById("domain-input").value;
   if (input) {
-    addBlockedDomain(input);
+    await addBlockedDomain(input);
     renderBlockedDomains();
   }
 }
@@ -86,8 +104,6 @@ window.onload = async () => {
 
 document.getElementById("add-domain-btn").addEventListener("click", submitForm);
 
-document
-  .getElementById("full-blocked-checkbox")
-  .addEventListener("change", async (event) => {
-    await setIsFullBlocked(event.target.checked);
-  });
+document.getElementById("full-blocked-checkbox").addEventListener("change", async (event) => {
+  await setIsFullBlocked(event.target.checked);
+});
