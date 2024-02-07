@@ -6,51 +6,38 @@ async function loadBlockedDomains(force = false) {
   if (!force && blockedDomains.length > 0) {
     return;
   }
-  let { blockedDomains } = await chrome.storage.sync.get(["blockedDomains"]);
-
-  blockedDomains ||= [];
-  console.log("Value currently is " + blockedDomains);
+  const { blockedDomains: loadedBlockedDomains } = await chrome.storage.sync.get(["blockedDomains"]);
+  blockedDomains = loadedBlockedDomains || [];
+  console.log("Blocked domains loaded:", blockedDomains);
 }
 
 async function addBlockedDomain(domain) {
   blockedDomains.push(domain);
-  await chrome.storage.sync.set({ blockedDomains: blockedDomains }, () => {
-    console.log("Value is set to " + blockedDomains);
-  });
+  await chrome.storage.sync.set({ blockedDomains: blockedDomains });
+  console.log("Value is set to " + blockedDomains);
 }
 
 async function removeBlockedDomain(domain) {
   const index = blockedDomains.indexOf(domain);
   if (index > -1) {
     blockedDomains.splice(index, 1);
-  }
-  await chrome.storage.sync.set({ blockedDomains: blockedDomains }, () => {
+    await chrome.storage.sync.set({ blockedDomains: blockedDomains });
     console.log("Value is set to " + blockedDomains);
-  });
-}
-
-async function removeBlockedDomain(domain) {
-  const index = blockedDomains.indexOf(domain);
-  if (index > -1) {
-    blockedDomains.splice(index, 1);
   }
-  await chrome.storage.sync.set({ blockedDomains: blockedDomains }, () => {
-    console.log("Value is set to " + blockedDomains);
-  });
 }
 
 async function loadIsFullBlocked(force = false) {
   if (!force && isFullBlocked !== null) {
     return;
   }
-  const { isFullBlocked } = await chrome.storage.sync.get(["isFullBlocked"]);
-  isFullBlocked ||= false;
+  const { isFullBlocked: loadedIsFullBlocked } = await chrome.storage.sync.get("isFullBlocked");
+  isFullBlocked = loadedIsFullBlocked !== undefined ? loadedIsFullBlocked : false;
+  console.log("Is full blocked loaded:", isFullBlocked);
 }
 
 async function setIsFullBlocked(isFullBlocked) {
-  await chrome.storage.sync.set({ isFullBlocked: isFullBlocked }, () => {
-    console.log("Value is set to " + isFullBlocked);
-  });
+  await chrome.storage.sync.set({ isFullBlocked: isFullBlocked });
+  console.log("Value is set to " + isFullBlocked);
 }
 
 function getDomain(inputString) {
