@@ -1,15 +1,14 @@
-var blockedDomains = [];
-var isFullBlocked = null;
+let blockedDomains = [];
+let isFullBlocked = null;
 
 async function loadBlockedDomains() {
-  if (blockedDomains.length > 0) {
-    return;
-  }
-  const { blockedDomains: rawBlockedDomains } = await chrome.storage.sync.get([
+  if (blockedDomains.length > 0) return;
+
+  const { blockedDomains } = await chrome.storage.sync.get([
     "blockedDomains",
   ]);
 
-  blockedDomains = rawBlockedDomains || [];
+  blockedDomains ||= [];
   console.log("Value currently is " + blockedDomains);
 }
 
@@ -17,12 +16,9 @@ async function addBlockedDomain(domain) {
   const filtedDomain = domain.toLowerCase();
   blockedDomains.push(filtedDomain);
 
-  await chrome.storage.sync.set(
-    { blockedDomains: blockedDomains },
-    function () {
-      console.log("Value is set to " + blockedDomains);
-    }
-  );
+  await chrome.storage.sync.set({ blockedDomains: blockedDomains }, () => {
+    console.log("Value is set to " + blockedDomains);
+  });
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     chrome.tabs.sendMessage(tabs[0].id, { action: "refreshBlockedDomains" });
   });
@@ -33,32 +29,26 @@ async function removeBlockedDomain(domain) {
   if (index > -1) {
     blockedDomains.splice(index, 1);
   }
-  await chrome.storage.sync.set(
-    { blockedDomains: blockedDomains },
-    function () {
-      console.log("Value is set to " + blockedDomains);
-    }
-  );
+  await chrome.storage.sync.set({ blockedDomains: blockedDomains }, () => {
+    console.log("Value is set to " + blockedDomains);
+  });
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     chrome.tabs.sendMessage(tabs[0].id, { action: "refreshBlockedDomains" });
   });
 }
 
 async function loadIsFullBlocked() {
-  if (isFullBlocked !== null) {
-    return;
-  }
-  const { isFullBlocked: rawIsFullBlocked } = await chrome.storage.sync.get([
-    "isFullBlocked",
-  ]);
-  isFullBlocked = rawIsFullBlocked || false;
+  if (isFullBlocked !== null) return;
+
+  const { isFullBlocked } = await chrome.storage.sync.get(["isFullBlocked"]);
+  isFullBlocked ||= false;
 }
 
 async function setIsFullBlocked(isFullBlocked) {
-  await chrome.storage.sync.set({ isFullBlocked: isFullBlocked }, function () {
+  await chrome.storage.sync.set({ isFullBlocked: isFullBlocked }, () => {
     console.log("Value is set to " + isFullBlocked);
   });
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     chrome.tabs.sendMessage(tabs[0].id, { action: "refreshBlockedDomains" });
   });
 }
